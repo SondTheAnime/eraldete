@@ -1,0 +1,17 @@
+[
+    {
+        "name": "Fuzil de Assalto",
+        "type": "Arma de Fogo",
+        "description": "Atira balinha",
+        "damage": "3d12",
+        "armor": null,
+        "weight": 2.0,
+        "value": 820,
+        "properties": [
+            "Perfurante"
+        ],
+        "requirements": {},
+        "created_by": "sondtheanime",
+        "created_at": "2025-02-17T23:29:01.706004"
+    }
+]

@@ -1,0 +1,65 @@
+{
+    "357209498286424064": {
+        "teste": {
+            "nome": "teste",
+            "nivel": 12,
+            "classe": "123",
+            "atributos": {
+                "forca": 2312,
+                "agilidade": 313,
+                "sapiencia": 2313,
+                "intelecto": 31,
+                "vigor": 312,
+                "coragem": 312
+            },
+            "vida_total": 5770752,
+            "vida_atual": 5770752,
+            "pericias": [],
+            "capacidades": [],
+            "equipamentos": [],
+            "titulos": []
+        },
+        "eraldo": {
+            "nome": "Eraldo",
+            "nivel": 99999999999,
+            "classe": "Deus do Lanche",
+            "atributos": {
+                "forca": 99999999999,
+                "agilidade": 99999999999,
+                "sapiencia": 9999999999999,
+                "intelecto": 9999999999,
+                "vigor": 99999999999,
+                "coragem": 9999999999999
+            },
+            "vida_total": 500000000005000031666716186796034,
+            "vida_atual": 500000000005000031666716186796034,
+            "pericias": [],
+            "capacidades": [],
+            "equipamentos": [],
+            "titulos": []
+        }
+    },
+    "670255264112312322": {
+        "klebinho": {
+            "nome": "Klebinho",
+            "nivel": 5,
+            "classe": "alquimista",
+            "atributos": {
+                "forca": 8,
+                "agilidade": 5,
+                "sapiencia": 5,
+                "intelecto": 5,
+                "vigor": 8,
+                "coragem": 5
+            },
+            "vida_total": 288,
+            "vida_atual": 288,
+            "pericias": [],
+            "capacidades": [],
+            "equipamentos": [
+                "Fuzil de Assalto"
+            ],
+            "titulos": []
+        }
+    }
+}

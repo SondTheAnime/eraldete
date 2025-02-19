@@ -227,5 +227,71 @@ class CharacterManagement(commands.Cog):
         embed = await self._create_character_embed(character, False)
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.command(name="excluirficha", description="Exclui uma ficha de personagem")
+    @app_commands.autocomplete(nome=lambda interaction, current: autocomplete_character_names(interaction, current))
+    async def excluir_ficha(self, interaction: discord.Interaction, nome: str):
+        """
+        # Comando para excluir uma ficha de personagem
+        
+        Args:
+            interaction: Interação do Discord
+            nome: Nome do personagem a ser excluído
+        """
+        # Carrega as fichas existentes
+        fichas = self.storage.load()
+        user_id = str(interaction.user.id)
+        
+        # Verifica se o usuário tem fichas
+        if user_id not in fichas:
+            await interaction.response.send_message("Você não tem nenhuma ficha criada!", ephemeral=True)
+            return
+        
+        # Verifica se a ficha existe
+        nome = nome.lower()
+        if nome not in fichas[user_id]:
+            await interaction.response.send_message("Ficha não encontrada!", ephemeral=True)
+            return
+        
+        # Remove a ficha
+        del fichas[user_id][nome]
+        
+        # Se não houver mais fichas para o usuário, remove a entrada dele
+        if not fichas[user_id]:
+            del fichas[user_id]
+        
+        # Salva as alterações
+        self.storage.save(fichas)
+        
+        await interaction.response.send_message(f"Ficha de {nome} excluída com sucesso!", ephemeral=True)
+
+# Função de autocomplete corrigida para ser uma corotina
+async def autocomplete_character_names(interaction: discord.Interaction, current: str) -> List[app_commands.Choice[str]]:
+    """
+    # Função de autocomplete para nomes de personagens
+    
+    Args:
+        interaction: Interação do Discord
+        current: Texto atual digitado pelo usuário
+        
+    Returns:
+        Lista de escolhas para o autocomplete
+    """
+    # Carrega as fichas do storage
+    storage = StorageManager(FICHAS_FILE)
+    fichas = storage.load()
+    
+    user_id = str(interaction.user.id)
+    if user_id not in fichas:
+        return []
+    
+    # Filtra os nomes que começam com o texto atual
+    matches = [
+        app_commands.Choice(name=ficha_data["nome"], value=nome)
+        for nome, ficha_data in fichas[user_id].items()
+        if nome.startswith(current.lower())
+    ]
+    
+    return matches[:25]  # Discord permite no máximo 25 opções
+
 async def setup(bot):
     await bot.add_cog(CharacterManagement(bot)) 

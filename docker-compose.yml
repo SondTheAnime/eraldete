@@ -2,8 +2,6 @@ services:
   bot:
     build: .
     container_name: discord_bot
-    ports:
-      - "8000:8000"
     volumes:
       # Volume para persistir os dados do bot
       - ./data:/app/data

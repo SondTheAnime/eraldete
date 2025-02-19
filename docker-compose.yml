@@ -1,0 +1,12 @@
+services:
+  bot:
+    build: .
+    container_name: discord_bot
+    volumes:
+      # Volume para persistir os dados do bot
+      - ./data:/app/data
+      # Volume para o arquivo .env
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
+    environment:
+      - TZ=America/Sao_Paulo

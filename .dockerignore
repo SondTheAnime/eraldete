@@ -1,0 +1,28 @@
+# Arquivos e diretórios do Git
+.git
+.gitignore
+
+# Ambientes virtuais Python
+venv/
+env/
+ENV/
+
+# Arquivos de cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Arquivos de dados
+data/
+
+# Arquivos de ambiente
+.env
+
+# Arquivos do Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Outros
+.DS_Store
+*.log

@@ -161,16 +161,17 @@ async def keep_alive():
             await asyncio.sleep(300)  # 300 segundos = 5 minutos
 
 # Função principal para executar bot e API
-def main():
+async def main():
     # Inicia a API em uma thread separada
     api_thread = Thread(target=run_api, daemon=True)
     api_thread.start()
     
-    # Adiciona a tarefa de keep_alive ao loop de eventos do bot
-    bot.loop.create_task(keep_alive())
+    # Adiciona a tarefa de keep_alive
+    asyncio.create_task(keep_alive())
     
     # Inicia o bot
-    bot.run(TOKEN)
+    await bot.start(TOKEN)
 
 if __name__ == "__main__":
-    main()
+    # Executa a função main de forma assíncrona
+    asyncio.run(main())

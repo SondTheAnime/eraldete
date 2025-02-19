@@ -3,6 +3,7 @@ from discord.ext import commands
 from discord import app_commands
 from config.settings import UserIDs
 from utils.dice import rolar_dados
+import re
 
 class FunCommands(commands.Cog):
     """Cog responsável por comandos divertidos e não relacionados ao RPG"""
@@ -42,9 +43,9 @@ class FunCommands(commands.Cog):
         else:
             await interaction.response.send_message(f"Com certeza o mais feio é o <@{UserIDs.FEIO}>! 🤮")
 
-    @app_commands.command(name="rolar", description="Rola dados usando notação padrão (exemplo: 2d20+5)")
+    @app_commands.command(name="rolar", description="Rola dados usando notação padrão (exemplo: 2d20+5,1d6)")
     @app_commands.describe(
-        notacao="Notação dos dados (exemplo: 2d20+5, 1d6, 3d8-2)",
+        notacao="Notação dos dados (exemplo: 2d20+5,1d6, 1d20,2d8)",
         motivo="Motivo da rolagem (opcional)"
     )
     async def rolar(
@@ -57,6 +58,9 @@ class FunCommands(commands.Cog):
         Rola dados usando notação padrão e exibe um resultado estilizado
         """
         try:
+            # Remove espaços extras e converte para minúsculas
+            notacao = notacao.strip().lower()
+            
             # Realiza a rolagem
             resultado = rolar_dados(notacao)
             
@@ -83,37 +87,63 @@ class FunCommands(commands.Cog):
                 inline=False
             )
             
-            # Campo com os resultados individuais
-            resultados_str = " + ".join([str(r) for r in resultado['resultados']])
+            # Mostra os resultados individuais de cada dado
+            resultados_str = []
+            notacoes = [n.strip() for n in resultado['notacao'].split(',')]
+            
+            for grupo_idx, (resultados, notacao) in enumerate(zip(resultado['resultados_grupos'], notacoes)):
+                tipo_dado = re.search(r'd\d+', notacao).group()  # Extrai o tipo do dado (d20, d6, etc)
+                for valor in resultados:
+                    # Adiciona emoji baseado no tipo do dado
+                    emoji = "🎯" if tipo_dado == "d20" else "🎲"
+                    resultados_str.append(f"{emoji} {tipo_dado}: **{valor}**")
+            
+            # Adiciona o modificador total no final se houver
             if resultado['modificador']:
                 sinal = "+" if resultado['modificador'] > 0 else ""
-                resultados_str += f" {sinal}{resultado['modificador']}"
+                resultados_str.append(f"💫 Modificador: {sinal}{resultado['modificador']}")
             
-            if len(resultados_str) > 1024:  # Limite do Discord
-                resultados_str = "Muitos dados para mostrar individualmente!"
+            # Divide em múltiplos campos se necessário (limite de 1024 caracteres por campo)
+            resultados_chunks = []
+            current_chunk = []
+            current_length = 0
             
-            embed.add_field(
-                name="🎯 Resultados",
-                value=f"`{resultados_str}`",
-                inline=False
-            )
+            for resultado_str in resultados_str:
+                if current_length + len(resultado_str) + 1 > 1024:  # +1 para a quebra de linha
+                    resultados_chunks.append("\n".join(current_chunk))
+                    current_chunk = [resultado_str]
+                    current_length = len(resultado_str)
+                else:
+                    current_chunk.append(resultado_str)
+                    current_length += len(resultado_str) + 1
+            
+            if current_chunk:
+                resultados_chunks.append("\n".join(current_chunk))
+            
+            # Adiciona os campos de resultados
+            for i, chunk in enumerate(resultados_chunks, 1):
+                embed.add_field(
+                    name=f"🎲 Resultados {f'(Parte {i})' if len(resultados_chunks) > 1 else ''}",
+                    value=chunk,
+                    inline=False
+                )
             
             # Adiciona críticos se houver (apenas para d20)
+            criticos = []
             if resultado['criticos']:
-                criticos = []
-                for idx in resultado['criticos']:
-                    valor = resultado['resultados'][idx - 1]
+                for grupo, idx in resultado['criticos']:
+                    valor = resultado['resultados_grupos'][grupo][idx - 1]
                     if valor == 20:
-                        criticos.append(f"🌟 Dado {idx}: Sucesso Crítico!")
+                        criticos.append(f"🌟 Sucesso Crítico! (d20: {valor})")
                     elif valor == 1:
-                        criticos.append(f"💥 Dado {idx}: Falha Crítica!")
-                
-                if criticos:
-                    embed.add_field(
-                        name="⚡ Críticos",
-                        value="\n".join(criticos),
-                        inline=False
-                    )
+                        criticos.append(f"💥 Falha Crítica! (d20: {valor})")
+            
+            if criticos:
+                embed.add_field(
+                    name="⚡ Críticos",
+                    value="\n".join(criticos),
+                    inline=False
+                )
             
             # Envia o resultado
             await interaction.response.send_message(embed=embed)
@@ -128,6 +158,7 @@ class FunCommands(commands.Cog):
                 "❌ Ocorreu um erro ao processar sua rolagem. Verifique a notação e tente novamente.",
                 ephemeral=True
             )
+            print(f"Erro ao processar rolagem: {e}")
 
 async def setup(bot):
     await bot.add_cog(FunCommands(bot)) 

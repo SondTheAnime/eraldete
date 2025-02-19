@@ -22,5 +22,8 @@ COPY . .
 # Cria diretórios necessários
 RUN mkdir -p data
 
-# Comando para executar o bot
+# Expõe a porta da API
+EXPOSE 8000
+
+# Comando para executar o bot e a API
 CMD ["python", "main.py"]

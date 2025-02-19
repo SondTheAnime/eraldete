@@ -1,12 +1,43 @@
 import discord
 from discord.ext import commands
 from config.settings import TOKEN, COMMAND_PREFIX, UserIDs
+import asyncio
+from fastapi import FastAPI
+import uvicorn
+from threading import Thread
 
 # Configuração do bot com todos os intents necessários
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, intents=intents)
+
+# Criação da aplicação FastAPI
+app = FastAPI(
+    title="Eraldete API",
+    description="API para interagir com o bot Eraldete",
+    version="1.0.0"
+)
+
+# Rotas da API
+@app.get("/")
+async def read_root():
+    return {"status": "online", "bot_name": bot.user.name if bot.is_ready() else None}
+
+@app.get("/guilds")
+async def get_guilds():
+    if not bot.is_ready():
+        return {"error": "Bot não está pronto"}
+    return {
+        "guilds": [
+            {
+                "name": guild.name,
+                "id": guild.id,
+                "member_count": guild.member_count
+            }
+            for guild in bot.guilds
+        ]
+    }
 
 # Comando para sincronizar os comandos slash
 @bot.tree.command(name="sync", description="Sincroniza os comandos do bot (apenas mestres)")
@@ -101,5 +132,18 @@ async def on_guild_join(guild):
         print(f'❌ Erro ao sincronizar comandos: {e}')
     print('='*50)
 
-# Inicia o bot
-bot.run(TOKEN)
+# Função para iniciar o servidor FastAPI
+def run_api():
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+# Função principal para executar bot e API
+def main():
+    # Inicia a API em uma thread separada
+    api_thread = Thread(target=run_api, daemon=True)
+    api_thread.start()
+    
+    # Inicia o bot
+    bot.run(TOKEN)
+
+if __name__ == "__main__":
+    main()

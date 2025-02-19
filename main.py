@@ -5,6 +5,7 @@ import asyncio
 from fastapi import FastAPI
 import uvicorn
 from threading import Thread
+import aiohttp
 
 # Configuração do bot com todos os intents necessários
 intents = discord.Intents.default()
@@ -23,6 +24,11 @@ app = FastAPI(
 @app.get("/")
 async def read_root():
     return {"status": "online", "bot_name": bot.user.name if bot.is_ready() else None}
+
+@app.get("/healthcheck")
+async def healthcheck():
+    # Rota simples para verificar se a API está online
+    return {"status": "healthy"}
 
 @app.get("/guilds")
 async def get_guilds():
@@ -136,11 +142,32 @@ async def on_guild_join(guild):
 def run_api():
     uvicorn.run(app, host="0.0.0.0", port=8000)
 
+# Função para fazer ping na API periodicamente
+async def keep_alive():
+    # Aguarda o bot estar pronto
+    await bot.wait_until_ready()
+    
+    async with aiohttp.ClientSession() as session:
+        while not bot.is_closed():
+            try:
+                # Faz uma requisição para o healthcheck a cada 5 minutos
+                async with session.get('http://localhost:8000/healthcheck') as response:
+                    if response.status == 200:
+                        print('📍 Ping realizado com sucesso')
+            except Exception as e:
+                print(f'❌ Erro ao realizar ping: {e}')
+            
+            # Aguarda 5 minutos antes do próximo ping
+            await asyncio.sleep(300)  # 300 segundos = 5 minutos
+
 # Função principal para executar bot e API
 def main():
     # Inicia a API em uma thread separada
     api_thread = Thread(target=run_api, daemon=True)
     api_thread.start()
+    
+    # Adiciona a tarefa de keep_alive ao loop de eventos do bot
+    bot.loop.create_task(keep_alive())
     
     # Inicia o bot
     bot.run(TOKEN)
